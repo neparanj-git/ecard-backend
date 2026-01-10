@@ -9,27 +9,43 @@ import archiver from "archiver";
 const DATA_DIR = path.join(process.cwd(), "data");
 const TEMPLATE_DIR = path.join(process.cwd(), "templates", "master-ecard");
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-const safe = (v) => (v === undefined || v === null ? "" : String(v));
+const fileForAdmin = (id) =>
+  path.join(DATA_DIR, `ecards_admin_${id}.json`);
 
-const makeSlug = (name = "") =>
-  name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "");
-
-const fileForAdmin = (adminId) =>
-  path.join(DATA_DIR, `ecards_admin_${adminId}.json`);
-
-const readCards = (adminId) => {
-  if (!fs.existsSync(fileForAdmin(adminId))) {
-    fs.writeFileSync(fileForAdmin(adminId), "[]");
+const readCards = (id) => {
+  if (!fs.existsSync(fileForAdmin(id))) {
+    fs.writeFileSync(fileForAdmin(id), "[]");
   }
-  return JSON.parse(fs.readFileSync(fileForAdmin(adminId), "utf-8"));
+  return JSON.parse(fs.readFileSync(fileForAdmin(id), "utf-8"));
 };
 
-const writeCards = (adminId, data) =>
-  fs.writeFileSync(fileForAdmin(adminId), JSON.stringify(data, null, 2));
+const writeCards = (id, data) =>
+  fs.writeFileSync(fileForAdmin(id), JSON.stringify(data, null, 2));
+
+const safe = (v) => {
+  if (v === undefined || v === null) return "";
+  return String(v);
+};
+
+/* =====================
+   DELETE
+===================== */
+
+export const deleteEcard = (req, res) => {
+  const { adminId } = req.query;
+  const { id } = req.params;
+
+  if (!adminId) {
+    return res.status(400).json({ message: "adminId required" });
+  }
+
+  const cards = readCards(adminId).filter((c) => c.id !== id);
+  writeCards(adminId, cards);
+
+  res.json({ success: true });
+};
 
 /* =====================
    CREATE / UPDATE
@@ -37,17 +53,13 @@ const writeCards = (adminId, data) =>
 
 export const createOrUpdateEcard = (req, res) => {
   const { adminId, ...card } = req.body;
-  if (!adminId) return res.status(400).json({ message: "adminId required" });
-
   const cards = readCards(adminId);
 
+  // SAFETY: ensure arrays always exist
   card.services = Array.isArray(card.services) ? card.services : [];
   card.testimonials = Array.isArray(card.testimonials)
     ? card.testimonials
     : [];
-
-  card.slug = card.slug || makeSlug(card.fullName);
-  card.shareMessage = card.shareMessage || "";
 
   if (card.id) {
     const i = cards.findIndex((c) => c.id === card.id);
@@ -62,7 +74,7 @@ export const createOrUpdateEcard = (req, res) => {
 };
 
 /* =====================
-   GET ALL
+   GET
 ===================== */
 
 export const getAllEcards = (req, res) => {
@@ -70,124 +82,82 @@ export const getAllEcards = (req, res) => {
 };
 
 /* =====================
-   DELETE
-===================== */
-
-export const deleteEcard = (req, res) => {
-  const { adminId } = req.query;
-  const { id } = req.params;
-
-  const cards = readCards(adminId).filter((c) => c.id !== id);
-  writeCards(adminId, cards);
-
-  res.json({ success: true });
-};
-
-/* =====================
-   PREVIEW (ADMIN)
+   PREVIEW
 ===================== */
 
 export const previewEcard = (req, res) => {
   const card = readCards(req.query.adminId).find(
     (c) => c.id === req.params.id
   );
-  if (!card) return res.status(404).send("E-card not found");
-  renderCard(card, res);
-};
 
-/* =====================
-   PUBLIC PREVIEW BY SLUG
-===================== */
-
-export const previewEcardBySlug = (req, res) => {
-  const { slug } = req.params;
-
-  const files = fs.readdirSync(DATA_DIR);
-  let card = null;
-
-  for (const file of files) {
-    const cards = JSON.parse(
-      fs.readFileSync(path.join(DATA_DIR, file), "utf-8")
-    );
-    card = cards.find((c) => c.slug === slug);
-    if (card) break;
+  if (!card) {
+    return res.status(404).send("E-card not found");
   }
-
-  if (!card) return res.status(404).send("E-card not found");
-  renderCard(card, res);
-};
-
-/* =====================
-   RENDER CARD (FIXED)
-===================== */
-
-function renderCard(card, res) {
-  card.slug = card.slug || makeSlug(card.fullName);
-  card.shareMessage = card.shareMessage || "";
 
   let html = fs.readFileSync(
     path.join(TEMPLATE_DIR, "index.html"),
     "utf-8"
   );
 
-  /* -------- SIMPLE FIELDS -------- */
-  html = html.split("{{FULLNAME}}").join(safe(card.fullName));
-  html = html.split("{{TAGLINE}}").join(safe(card.tagline));
-  html = html.split("{{DESIGNATION}}").join(safe(card.designation));
-  html = html.split("{{COMPANY}}").join(safe(card.company));
-  html = html.split("{{PHONE}}").join(safe(card.phones?.[0]));
-  html = html.split("{{WHATSAPP}}").join(safe(card.whatsapps?.[0]));
-  html = html.split("{{EMAIL}}").join(safe(card.emails?.[0]));
-  html = html.split("{{INSTAGRAM}}").join(safe(card.instagram));
-  html = html.split("{{FACEBOOK}}").join(safe(card.facebook));
-  html = html.split("{{YOUTUBE}}").join(safe(card.youtube));
-  html = html.split("{{LINKEDIN}}").join(safe(card.linkedin));
-  html = html.split("{{TWITTER}}").join(safe(card.twitter));
-  html = html.split("{{MAPLINK}}").join(safe(card.maps?.[0]));
-  html = html.split("{{WEBSITE}}").join(safe(card.website));
-  html = html.split("{{SLUG}}").join(safe(card.slug));
-  html = html.split("{{SHARE_MESSAGE}}").join(safe(card.shareMessage));
+  /* ---------------------
+     SIMPLE FIELDS
+  --------------------- */
+  Object.entries(card).forEach(([k, v]) => {
+    if (Array.isArray(v)) return;
+    html = html.replaceAll(`{{${k.toUpperCase()}}}`, safe(v));
+  });
 
-  /* -------- ABOUT -------- */
-  html = html
-    .split("{{ABOUT}}")
-    .join(safe(card.about).replace(/\n/g, "<br>"));
-
-  /* -------- SERVICES -------- */
+  /* ---------------------
+     SERVICES → HTML
+  --------------------- */
   const servicesHtml = (card.services || [])
     .map(
-      (s) =>
-        `<li>${safe(s.title)}${
-          s.description ? " - " + safe(s.description) : ""
-        }</li>`
+      (s) => `
+        <div class="service">
+          <h4>${safe(s.title)}</h4>
+          <p>${safe(s.description)}</p>
+        </div>
+      `
     )
     .join("");
-  html = html.split("{{SERVICES}}").join(servicesHtml);
 
-  /* -------- TESTIMONIALS -------- */
+  /* ---------------------
+     TESTIMONIALS → HTML  ✅ FIX
+  --------------------- */
   const testimonialsHtml = (card.testimonials || [])
     .map(
-      (t) =>
-        `<p><strong>${safe(t.name)}</strong><br>${safe(t.message)}</p>`
+      (t) => `
+        <div class="service">
+          <h4>${safe(t.name)}</h4>
+          <p>${safe(t.message)}</p>
+        </div>
+      `
     )
-    .join("<hr>");
-  html = html.split("{{TESTIMONIALS}}").join(testimonialsHtml);
+    .join("");
+
+  html = html.replaceAll("{{SERVICES}}", servicesHtml);
+  html = html.replaceAll("{{TESTIMONIALS}}", testimonialsHtml);
 
   res.send(html);
-}
+};
 
 /* =====================
-   EXPORT ZIP (UNCHANGED)
+   EXPORT ZIP
 ===================== */
 
 export const exportEcardZip = (req, res) => {
   const card = readCards(req.query.adminId).find(
     (c) => c.id === req.params.id
   );
-  if (!card) return res.status(404).send("E-card not found");
+
+  if (!card) {
+    return res.status(404).send("E-card not found");
+  }
 
   const zip = archiver("zip");
-  const safeName = safe(card.fullName || "ecard").replace(/\s+/g, "_");
+
+  const displayName = safe(card.fullName || card.name || "ecard");
+  const safeName = displayName.replace(/\s+/g, "_");
 
   res.setHeader(
     "Content-Disposition",
@@ -201,10 +171,55 @@ export const exportEcardZip = (req, res) => {
     "utf-8"
   );
 
+  /* SIMPLE FIELDS */
+  Object.entries(card).forEach(([k, v]) => {
+    if (Array.isArray(v)) return;
+    html = html.replaceAll(`{{${k.toUpperCase()}}}`, safe(v));
+  });
+
+  /* SERVICES */
+  const servicesHtml = (card.services || [])
+    .map(
+      (s) => `
+        <div class="service">
+          <h4>${safe(s.title)}</h4>
+          <p>${safe(s.description)}</p>
+        </div>
+      `
+    )
+    .join("");
+
+  /* TESTIMONIALS */
+  const testimonialsHtml = (card.testimonials || [])
+    .map(
+      (t) => `
+        <div class="service">
+          <h4>${safe(t.name)}</h4>
+          <p>${safe(t.message)}</p>
+        </div>
+      `
+    )
+    .join("");
+
+  html = html.replaceAll("{{SERVICES}}", servicesHtml);
+  html = html.replaceAll("{{TESTIMONIALS}}", testimonialsHtml);
+
   zip.append(html, { name: "index.html" });
+
+  /* STATIC FILES */
   zip.directory(TEMPLATE_DIR, false, (e) =>
-    e.name === "index.html" ? false : e
+    ["index.html", "template.vcf"].includes(e.name) ? false : e
   );
+
+  /* VCARD */
+  const vcf = `BEGIN:VCARD
+VERSION:3.0
+FN:${displayName}
+TEL:${safe(card.phone)}
+EMAIL:${safe(card.email)}
+END:VCARD`;
+
+  zip.append(vcf, { name: `${safeName}.vcf` });
 
   zip.finalize();
 };

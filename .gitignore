@@ -1,0 +1,11 @@
+# dependencies
+node_modules/
+
+# environment variables
+.env
+
+# runtime generated data files
+data/*.json
+
+# keep data directory in git
+!data/.gitkeep

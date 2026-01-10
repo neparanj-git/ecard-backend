@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Open Graph -->
   <meta property="og:image" content="OGsnap.jpg" />
-  <meta property="og:title" id="ogTitle" />
-  <meta property="og:description" id="ogDesc" />
+  <meta property="og:title" content="{{FULLNAME}}" />
+  <meta property="og:description" content="{{TAGLINE}}" />
 
-  <title id="pageTitle"></title>
+  <title>{{FULLNAME}}</title>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 
@@ -20,7 +19,6 @@
 
   <link href="css/style.css" rel="stylesheet">
   <link rel="stylesheet" href="animate.css">
-  <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
 </head>
 
 <body>
@@ -48,29 +46,37 @@
 
       <!-- Profile -->
       <div class="profile_info">
-        <h4 class="name" id="fullName"></h4>
-        <p id="tagline"></p>
+        <h4 class="name">{{FULLNAME}}</h4>
+        <p>{{TAGLINE}}</p>
+        <p>{{DESIGNATION}}</p>
+        <p>{{COMPANY}}</p>
       </div>
 
       <!-- Contact Buttons -->
       <div class="row justify-content-md-center g-0">
         <div class="col-4 contact_info">
-          <a href="javascript:void(0)" id="whatsappBtn" class="green">
+          <a href="https://api.whatsapp.com/send?phone={{WHATSAPP}}" class="green">
             <i class="fa fa-whatsapp fa-2x"></i><br>Whatsapp
           </a>
         </div>
 
         <div class="col-4 contact_info">
-          <a id="callBtn" class="skyblue">
+          <a href="tel:{{PHONE}}" class="skyblue">
             <i class="fa fa-phone fa-2x"></i><br>Call
           </a>
         </div>
 
         <div class="col-4 contact_info">
-          <a id="vcfBtn" class="pink">
+          <a href="{{FULLNAME}}.vcf" class="pink">
             <i class="fa fa-address-book fa-2x"></i><br>Add Contact
           </a>
         </div>
+      </div>
+
+      <!-- Services -->
+      <div class="info">
+        <h5>Services</h5>
+        {{SERVICES}}
       </div>
 
       <!-- Tabs -->
@@ -88,9 +94,27 @@
         </ul>
 
         <div class="tab-content">
-          <div class="tab-pane fade show active" id="servicesTab"></div>
-          <div class="tab-pane fade" id="aboutTab"></div>
-          <div class="tab-pane fade" id="testimonialsTab"></div>
+
+          <!-- SERVICES TAB -->
+          <div class="tab-pane fade show active" id="servicesTab">
+            {{SERVICES}}
+          </div>
+
+          <!-- ABOUT TAB -->
+          <div class="tab-pane fade" id="aboutTab">
+            <p>{{ABOUT}}</p>
+          </div>
+
+          <!-- TESTIMONIALS TAB (ONLY CHANGE HERE) -->
+          <div class="tab-pane fade" id="testimonialsTab">
+
+    
+
+            <!-- MULTIPLE TESTIMONIALS WILL BE INJECTED HERE -->
+            {{TESTIMONIALS}}
+
+          </div>
+
         </div>
       </div>
 
@@ -102,11 +126,41 @@
         </div>
       </div>
 
-      <!-- Social Media -->
-      <div class="social_media" id="socials"></div>
+      <!-- SOCIAL MEDIA -->
+      <div class="social_media">
+
+        <a id="emailIcon" href="mailto:{{EMAIL}}">
+          <i class="fa fa-envelope fa-2x"></i>
+        </a>
+
+        <a id="instaIcon" href="{{INSTAGRAM}}" target="_blank">
+          <i class="fa fa-instagram fa-2x"></i>
+        </a>
+
+        <a id="fbIcon" href="{{FACEBOOK}}" target="_blank">
+          <i class="fa fa-facebook fa-2x"></i>
+        </a>
+
+        <a id="ytIcon" href="{{YOUTUBE}}" target="_blank">
+          <i class="fa fa-youtube-play fa-2x"></i>
+        </a>
+
+        <a id="linkedinIcon" href="{{LINKEDIN}}" target="_blank">
+          <i class="fa fa-linkedin fa-2x"></i>
+        </a>
+
+        <a id="mapIcon" href="{{MAPLINK}}" target="_blank">
+          <i class="fa fa-google fa-2x"></i>
+        </a>
+
+        <a id="twitterIcon" href="{{TWITTER}}" target="_blank">
+          <i class="fa fa-twitter fa-2x"></i>
+        </a>
+
+      </div>
 
       <p class="footer-text">
-        Designed & Developed by <a id="websiteLink" target="_blank"></a>
+        Designed & Developed by <a href="{{WEBSITE}}" target="_blank">{{COMPANY}}</a>
       </p>
 
     </div>
@@ -114,156 +168,25 @@
 </div>
 
 <script>
-  /* ===============================
-     CARD DATA (INJECTED BY BACKEND)
-  =============================== */
-  const CARD = __CARD_DATA__;
-
-  /* ===============================
-     BASIC INFO
-  =============================== */
-  const setText = (id, value) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (!value) el.style.display = "none";
-    else el.textContent = value;
-  };
-
-  setText("fullName", CARD.fullName);
-  setText("tagline", CARD.tagline);
-
-  document.title = CARD.fullName || "";
-  document.getElementById("ogTitle").content = CARD.fullName || "";
-  document.getElementById("ogDesc").content = CARD.tagline || "";
-
-  /* ===============================
-     CONTACT BUTTONS
-  =============================== */
-
-  // CALL
-  if (Array.isArray(CARD.phones) && CARD.phones[0]) {
-    document.getElementById("callBtn").href = "tel:" + CARD.phones[0];
-  } else {
-    document.getElementById("callBtn").style.display = "none";
-  }
-
-  // ADD CONTACT
-  document.getElementById("vcfBtn").href = "template.vcf";
-
-  /* ===============================
-     BUILD WHATSAPP MESSAGE
-  =============================== */
-  function buildWhatsappMessage() {
-    const msg = CARD.shareMessage || "";
-    const slug = CARD.slug || "";
-
-    const link = slug
-      ? "https://e-bizcard.in/" + slug + "/"
-      : "";
-
-    let finalMsg = "";
-
-    if (msg) finalMsg += msg + "\n\n";
-    if (link) finalMsg += link + "\n\n";
-    finalMsg += "Send Hi to activate the link";
-
-    return finalMsg.trim();
-  }
-
-  // WHATSAPP ICON
-  if (Array.isArray(CARD.whatsapps) && CARD.whatsapps[0]) {
-    document.getElementById("whatsappBtn").onclick = function () {
-      window.open(
-        "https://api.whatsapp.com/send?phone=" +
-          CARD.whatsapps[0] +
-          "&text=" +
-          encodeURIComponent(buildWhatsappMessage()),
-        "_blank"
-      );
-    };
-  } else {
-    document.getElementById("whatsappBtn").style.display = "none";
-  }
-
-  /* ===============================
-     SHARE BUTTON
-  =============================== */
-  document.getElementById("shareMe").onclick = function () {
-    const no = document.getElementById("personNo").value;
-    if (!no) return alert("Please enter a mobile number");
-
-    window.open(
+  $("#shareMe").click(function () {
+    var no = $("#personNo").val();
+    location.href =
       "https://api.whatsapp.com/send?phone=91" + no +
-        "&text=" + encodeURIComponent(buildWhatsappMessage()),
-      "_blank"
-    );
-  };
+      "&text=Please%20find%20my%20Digital%20Business%20Card:%0a%0a" +
+      window.location.href;
+  });
 
-  /* ===============================
-     SERVICES
-  =============================== */
-  const servicesTab = document.getElementById("servicesTab");
-  if (Array.isArray(CARD.services) && CARD.services.length) {
-    servicesTab.innerHTML = CARD.services
-      .filter(s => s.title || s.description)
-      .map(s => `
-        <div class="mb-2">
-          <strong>${s.title || ""}</strong>
-          <p>${s.description || ""}</p>
-        </div>
-      `).join("");
-  } else {
-    servicesTab.style.display = "none";
-  }
-
-  /* ===============================
-     ABOUT
-  =============================== */
-  const aboutTab = document.getElementById("aboutTab");
-  if (CARD.about) {
-    aboutTab.innerHTML = CARD.about;
-  } else {
-    aboutTab.style.display = "none";
-  }
-
-  /* ===============================
-     TESTIMONIALS
-  =============================== */
-  const testimonialsTab = document.getElementById("testimonialsTab");
-  if (Array.isArray(CARD.testimonials) && CARD.testimonials.length) {
-    testimonialsTab.innerHTML = CARD.testimonials
-      .filter(t => t.name || t.message)
-      .map(t => `
-        <div class="mb-2">
-          <strong>${t.name || ""}</strong>
-          <p>${t.message || ""}</p>
-        </div>
-      `).join("");
-  } else {
-    testimonialsTab.style.display = "none";
-  }
-
-  /* ===============================
-     SOCIAL LINKS
-  =============================== */
-  const socialDiv = document.getElementById("socials");
-  const socials = [
-    ["emails", "fa-envelope", "mailto:"],
-    ["instagram", "fa-instagram", ""],
-    ["facebook", "fa-facebook", ""],
-    ["youtube", "fa-youtube-play", ""],
-    ["linkedin", "fa-linkedin", ""],
-    ["twitter", "fa-twitter", ""],
-    ["maps", "fa-google", ""]
-  ];
-
-  socials.forEach(([key, icon, prefix]) => {
-    if (Array.isArray(CARD[key]) && CARD[key][0]) {
-      const a = document.createElement("a");
-      a.href = prefix + CARD[key][0];
-      a.target = "_blank";
-      a.innerHTML = `<i class="fa ${icon} fa-2x"></i>`;
-      socialDiv.appendChild(a);
+  /* Auto-hide icons if link is missing */
+  document.querySelectorAll(".social_media a").forEach(function (a) {
+    const href = a.getAttribute("href");
+    if (
+      !href ||
+      href.trim() === "" ||
+      href.includes("{{") ||
+      href === "mailto:" ||
+      href === "#"
+    ) {
+      a.style.display = "none";
     }
   });
 </script>
