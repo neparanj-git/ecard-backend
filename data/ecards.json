@@ -1,0 +1,160 @@
+[
+  {
+    "id": "1767975701667",
+    "fullName": "Neha",
+    "designation": "",
+    "company": "",
+    "tagline": "",
+    "phones": [
+      ""
+    ],
+    "whatsapps": [
+      ""
+    ],
+    "emails": [
+      ""
+    ],
+    "addresses": [
+      ""
+    ],
+    "maps": [
+      ""
+    ],
+    "instagram": [
+      ""
+    ],
+    "twitter": [
+      ""
+    ],
+    "facebook": [
+      ""
+    ],
+    "youtube": [
+      ""
+    ],
+    "whatsappLinks": [
+      ""
+    ],
+    "about": "",
+    "services": [
+      {
+        "title": "",
+        "description": ""
+      }
+    ],
+    "testimonials": [
+      {
+        "name": "",
+        "message": ""
+      }
+    ],
+    "shareMessage": "",
+    "createdAt": "2026-01-09T16:21:41.677Z",
+    "adminId": "admin"
+  },
+  {
+    "id": "1767988000585",
+    "fullName": "Neha",
+    "designation": "Intern",
+    "company": "Up media",
+    "tagline": "",
+    "phones": [
+      "9004055584"
+    ],
+    "whatsapps": [
+      "9004055584"
+    ],
+    "emails": [
+      "n@gmail.com"
+    ],
+    "addresses": [
+      ""
+    ],
+    "maps": [
+      ""
+    ],
+    "instagram": [
+      "instagram.com"
+    ],
+    "twitter": [
+      ""
+    ],
+    "facebook": [
+      ""
+    ],
+    "youtube": [
+      "youtube.com"
+    ],
+    "whatsappLinks": [
+      "9004055584"
+    ],
+    "about": "hi",
+    "services": [
+      {
+        "title": "",
+        "description": "hi"
+      }
+    ],
+    "testimonials": [
+      {
+        "name": "",
+        "message": "hi"
+      }
+    ],
+    "shareMessage": "\npls find my business card below",
+    "adminId": "1767963266043",
+    "slug": "neha"
+  },
+  {
+    "id": "1767988007021",
+    "fullName": "Seema",
+    "designation": "",
+    "company": "",
+    "tagline": "",
+    "phones": [
+      ""
+    ],
+    "whatsapps": [
+      ""
+    ],
+    "emails": [
+      ""
+    ],
+    "addresses": [
+      ""
+    ],
+    "maps": [
+      ""
+    ],
+    "instagram": [
+      ""
+    ],
+    "twitter": [
+      ""
+    ],
+    "facebook": [
+      ""
+    ],
+    "youtube": [
+      ""
+    ],
+    "whatsappLinks": [
+      ""
+    ],
+    "about": "",
+    "services": [
+      {
+        "title": "",
+        "description": ""
+      }
+    ],
+    "testimonials": [
+      {
+        "name": "",
+        "message": ""
+      }
+    ],
+    "shareMessage": "",
+    "adminId": "1767963266043"
+  }
+]
